@@ -1,0 +1,26 @@
+@model CLDV6211POE_Part1.Models.Venue
+
+@{
+    ViewData["Title"] = "Venue Details";
+}
+
+<h1>Venue Details</h1>
+
+<div>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">Name</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Name)</dd>
+        <dt class="col-sm-3">Location</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Location)</dd>
+        <dt class="col-sm-3">Capacity</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Capacity)</dd>
+        <dt class="col-sm-3">Image</dt>
+        <dd class="col-sm-9"><img src="@Model.ImageUrl" alt="@Model.Name" style="max-width:400px;" /></dd>
+    </dl>
+</div>
+
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.VenueId" class="btn btn-warning">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>
