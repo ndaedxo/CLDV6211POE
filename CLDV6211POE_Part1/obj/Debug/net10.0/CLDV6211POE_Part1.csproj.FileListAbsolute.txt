@@ -219,3 +219,4 @@ C:\Users\lab_services_student\Documents\GitHub\CLDV6211POE\CLDV6211POE_Part1\obj
 C:\Users\lab_services_student\Documents\GitHub\CLDV6211POE\CLDV6211POE_Part1\obj\Debug\net10.0\CLDV6211POE_Part1.pdb
 C:\Users\lab_services_student\Documents\GitHub\CLDV6211POE\CLDV6211POE_Part1\obj\Debug\net10.0\CLDV6211POE_Part1.genruntimeconfig.cache
 C:\Users\lab_services_student\Documents\GitHub\CLDV6211POE\CLDV6211POE_Part1\obj\Debug\net10.0\ref\CLDV6211POE_Part1.dll
+C:\Users\lab_services_student\Documents\GitHub\CLDV6211POE\CLDV6211POE_Part1\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt

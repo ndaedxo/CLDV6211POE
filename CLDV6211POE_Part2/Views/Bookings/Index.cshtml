@@ -1,0 +1,101 @@
+@model IEnumerable<CLDV6211POE_Part2.Models.Booking>
+
+@{
+    ViewData["Title"] = "Bookings";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">Bookings</h1>
+    <a asp-action="Create" class="btn btn-primary">+ Add New Booking</a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<form asp-action="Index" method="get" class="mb-4">
+    <div class="card">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Search By</label>
+                    <select name="searchBy" class="form-control">
+                        <option value="BookingId" selected="@(ViewData["SearchBy"]?.ToString() == "BookingId")">Booking ID</option>
+                        <option value="EventName" selected="@(ViewData["SearchBy"]?.ToString() == "EventName")">Event Name</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="searchString" class="form-control" placeholder="Enter search value..." value="@ViewData["SearchString"]" />
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Search</button>
+                </div>
+            </div>
+            @if (ViewData["SearchString"] != null)
+            {
+                <div class="mt-2">
+                    <a asp-action="Index" class="btn btn-sm btn-secondary">Clear Search</a>
+                </div>
+            }
+        </div>
+    </div>
+</form>
+
+@if (!Model.Any())
+{
+    <div class="empty-state">
+        @if (ViewData["SearchString"] != null)
+        {
+            <p>No bookings found matching your search criteria.</p>
+        }
+        else
+        {
+            <p>No bookings found. Create your first booking to get started.</p>
+        }
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Booking ID</th>
+                    <th>Event</th>
+                    <th>Venue</th>
+                    <th>Booking Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td><span class="badge bg-primary">#@item.BookingId</span></td>
+                        <td><strong>@Html.DisplayFor(modelItem => item.Event.Name)</strong></td>
+                        <td>@Html.DisplayFor(modelItem => item.Venue.Name)</td>
+                        <td>@item.BookingDate.ToString("MMM dd, yyyy HH:mm")</td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@item.BookingId" class="btn btn-sm btn-warning">Edit</a>
+                            <a asp-action="Details" asp-route-id="@item.BookingId" class="btn btn-sm btn-info">Details</a>
+                            <a asp-action="Delete" asp-route-id="@item.BookingId" class="btn btn-sm btn-danger">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

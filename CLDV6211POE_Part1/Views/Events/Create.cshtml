@@ -29,8 +29,14 @@
             </div>
             <div class="form-group mb-3">
                 <label asp-for="ImageUrl" class="control-label"></label>
-                <input asp-for="ImageUrl" class="form-control" placeholder="https://via.placeholder.com/300x200?text=Event" />
+                <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
                 <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                <small class="d-block text-muted mt-2">
+                    <strong>Suggested image services:</strong><br />
+                    • <a href="https://picsum.photos" target="_blank">picsum.photos</a> - Use format: <code>https://picsum.photos/width/height</code> (e.g., 300/200)<br />
+                    • <a href="https://placehold.co" target="_blank">placehold.co</a> - Use format: <code>https://placehold.co/widthxheight</code> (e.g., 300x200)<br />
+                    • <a href="https://images.unsplash.com" target="_blank">Unsplash</a> - Right-click any image and select "Copy Image Address"
+                </small>
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />

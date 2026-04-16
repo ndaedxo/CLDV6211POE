@@ -121,12 +121,24 @@ namespace CLDV6211POE_Part1.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var eventItem = await _context.Events.FindAsync(id);
-            if (eventItem != null)
+            var eventItem = await _context.Events
+                .Include(e => e.Bookings)
+                .FirstOrDefaultAsync(e => e.EventId == id);
+
+            if (eventItem == null)
             {
-                _context.Events.Remove(eventItem);
-                await _context.SaveChangesAsync();
+                return NotFound();
             }
+
+            if (eventItem.Bookings.Any())
+            {
+                TempData["ErrorMessage"] = "Cannot delete event — it has active bookings. Delete the bookings first.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            _context.Events.Remove(eventItem);
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Event deleted successfully.";
             return RedirectToAction(nameof(Index));
         }
 

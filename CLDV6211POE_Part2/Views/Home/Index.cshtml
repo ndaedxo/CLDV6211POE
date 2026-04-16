@@ -1,0 +1,41 @@
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="hero-section">
+    <h1>Welcome to EventEase</h1>
+    <p>Streamline your venue booking management &mdash; manage venues, events, and bookings all in one place.</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3" style="font-size: 2.5rem;">&#127960;</div>
+                <h5 class="card-title">Venues</h5>
+                <p class="card-text">Browse, create, and manage your venue portfolio with capacity details and images.</p>
+                <a asp-controller="Venues" asp-action="Index" class="btn btn-primary">Manage Venues</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3" style="font-size: 2.5rem;">&#127881;</div>
+                <h5 class="card-title">Events</h5>
+                <p class="card-text">Create and manage events with scheduling, details, and visual branding.</p>
+                <a asp-controller="Events" asp-action="Index" class="btn btn-primary">Manage Events</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3" style="font-size: 2.5rem;">&#128197;</div>
+                <h5 class="card-title">Bookings</h5>
+                <p class="card-text">Link events to venues, manage booking dates, and track reservations.</p>
+                <a asp-controller="Bookings" asp-action="Index" class="btn btn-primary">Manage Bookings</a>
+            </div>
+        </div>
+    </div>
+</div>

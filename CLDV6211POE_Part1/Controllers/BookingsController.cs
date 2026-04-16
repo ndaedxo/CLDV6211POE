@@ -53,17 +53,64 @@ namespace CLDV6211POE_Part1.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("BookingId,EventId,VenueId,BookingDate")] Booking booking)
+        public async Task<IActionResult> CreatePost()
         {
-            if (ModelState.IsValid)
+            var eventIdStr = Request.Form["EventId"];
+            var venueIdStr = Request.Form["VenueId"];
+            var bookingDateStr = Request.Form["BookingDate"];
+
+            if (!int.TryParse(eventIdStr, out int eventId) || eventId == 0)
             {
-                _context.Add(booking);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                ModelState.AddModelError("EventId", "Please select an event.");
             }
-            ViewData["EventId"] = new SelectList(await _context.Events.ToListAsync(), "EventId", "Name", booking.EventId);
-            ViewData["VenueId"] = new SelectList(await _context.Venues.ToListAsync(), "VenueId", "Name", booking.VenueId);
-            return View(booking);
+
+            if (!int.TryParse(venueIdStr, out int venueId) || venueId == 0)
+            {
+                ModelState.AddModelError("VenueId", "Please select a venue.");
+            }
+
+            if (!DateTime.TryParse(bookingDateStr, out DateTime bookingDate))
+            {
+                ModelState.AddModelError("BookingDate", "Please select a booking date.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewData["EventId"] = new SelectList(await _context.Events.ToListAsync(), "EventId", "Name", eventId);
+                ViewData["VenueId"] = new SelectList(await _context.Venues.ToListAsync(), "VenueId", "Name", venueId);
+                return View();
+            }
+
+            var eventExists = await _context.Events.AnyAsync(e => e.EventId == eventId);
+            var venueExists = await _context.Venues.AnyAsync(v => v.VenueId == venueId);
+
+            if (!eventExists)
+            {
+                ModelState.AddModelError("EventId", "Selected event does not exist.");
+                ViewData["EventId"] = new SelectList(await _context.Events.ToListAsync(), "EventId", "Name", eventId);
+                ViewData["VenueId"] = new SelectList(await _context.Venues.ToListAsync(), "VenueId", "Name", venueId);
+                return View();
+            }
+
+            if (!venueExists)
+            {
+                ModelState.AddModelError("VenueId", "Selected venue does not exist.");
+                ViewData["EventId"] = new SelectList(await _context.Events.ToListAsync(), "EventId", "Name", eventId);
+                ViewData["VenueId"] = new SelectList(await _context.Venues.ToListAsync(), "VenueId", "Name", venueId);
+                return View();
+            }
+
+            var booking = new Booking
+            {
+                EventId = eventId,
+                VenueId = venueId,
+                BookingDate = bookingDate
+            };
+
+            _context.Add(booking);
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Booking created successfully.";
+            return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> Edit(int? id)
@@ -92,12 +139,26 @@ namespace CLDV6211POE_Part1.Controllers
                 return NotFound();
             }
 
+            var eventExists = await _context.Events.AnyAsync(e => e.EventId == booking.EventId);
+            var venueExists = await _context.Venues.AnyAsync(v => v.VenueId == booking.VenueId);
+
+            if (!eventExists)
+            {
+                ModelState.AddModelError("EventId", "Selected event does not exist.");
+            }
+
+            if (!venueExists)
+            {
+                ModelState.AddModelError("VenueId", "Selected venue does not exist.");
+            }
+
             if (ModelState.IsValid)
             {
                 try
                 {
                     _context.Update(booking);
                     await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Booking updated successfully.";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
