@@ -7,10 +7,12 @@ namespace CLDV6211POE_Part2.Services
     {
         private readonly BlobServiceClient _blobServiceClient;
         private readonly BlobContainerClient _containerClient;
+        private readonly ILogger<BlobStorageService>? _logger;
         private const string ContainerName = "venue-images";
 
-        public BlobStorageService(IConfiguration configuration)
+        public BlobStorageService(IConfiguration configuration, ILogger<BlobStorageService> logger)
         {
+            _logger = logger;
             var connectionString = configuration.GetConnectionString("AzureStorage") 
                 ?? "UseDevelopmentStorage=true";
             
@@ -28,15 +30,22 @@ namespace CLDV6211POE_Part2.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error creating container: {ex.Message}");
+                _logger?.LogError(ex, "Error creating container {ContainerName}", ContainerName);
             }
         }
 
-        public async Task<string> UploadImageAsync(IFormFile file, string existingImageUrl = null)
+        private const long MaxFileSizeBytes = 5 * 1024 * 1024; // 5MB
+
+        public async Task<string> UploadImageAsync(IFormFile? file, string? existingImageUrl = null)
         {
             if (file == null || file.Length == 0)
             {
                 return existingImageUrl ?? "https://via.placeholder.com/300x200?text=No+Image";
+            }
+
+            if (file.Length > MaxFileSizeBytes)
+            {
+                throw new InvalidOperationException($"File size exceeds 5MB limit. Current size: {file.Length / 1024 / 1024:F1}MB");
             }
 
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
@@ -47,12 +56,11 @@ namespace CLDV6211POE_Part2.Services
                 throw new InvalidOperationException("Invalid file type. Allowed: JPG, PNG, GIF, WebP");
             }
 
-            if (existingImageUrl != null && existingImageUrl.Contains("blob.core.windows.net") || existingImageUrl?.Contains("via.placeholder") == false)
+            if (!string.IsNullOrEmpty(existingImageUrl) && !existingImageUrl.Contains("via.placeholder"))
             {
                 try
                 {
-                    var oldBlobName = Path.GetFileName(new Uri(existingImageUrl).LocalPath);
-                    await DeleteImageAsync(oldBlobName);
+                    await DeleteImageAsync(existingImageUrl);
                 }
                 catch
                 {
@@ -76,38 +84,30 @@ namespace CLDV6211POE_Part2.Services
             return blobClient.Uri.ToString();
         }
 
-        public async Task DeleteImageAsync(string blobName)
+        public async Task DeleteImageAsync(string blobNameOrUrl)
         {
-            if (string.IsNullOrEmpty(blobName) || blobName.Contains("placeholder"))
+            if (string.IsNullOrEmpty(blobNameOrUrl) || blobNameOrUrl.Contains("placeholder"))
             {
                 return;
             }
 
             try
             {
+                string blobName = blobNameOrUrl;
+                
+                if (blobNameOrUrl.StartsWith("http"))
+                {
+                    blobName = Path.GetFileName(new Uri(blobNameOrUrl).LocalPath);
+                }
+                
                 var blobClient = _containerClient.GetBlobClient(blobName);
                 await blobClient.DeleteIfExistsAsync();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error deleting blob: {ex.Message}");
+                _logger?.LogError(ex, "Error deleting blob {BlobNameOrUrl}", blobNameOrUrl);
             }
         }
 
-        public string GetImageUrl(string blobName)
-        {
-            if (string.IsNullOrEmpty(blobName))
-            {
-                return "https://via.placeholder.com/300x200?text=No+Image";
-            }
-
-            if (blobName.StartsWith("http"))
-            {
-                return blobName;
-            }
-
-            var blobClient = _containerClient.GetBlobClient(blobName);
-            return blobClient.Uri.ToString();
-        }
     }
 }

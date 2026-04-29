@@ -59,7 +59,7 @@
     <div class="empty-state">
         @if (ViewData["SearchString"] != null)
         {
-            <p>No bookings found matching your search criteria.</p>
+            <p>No bookings found matching "@ViewData["SearchString"]". Try a different search term.</p>
         }
         else
         {
@@ -76,6 +76,7 @@ else
                     <th>Booking ID</th>
                     <th>Event</th>
                     <th>Venue</th>
+                    <th>Venue Location</th>
                     <th>Booking Date</th>
                     <th>Actions</th>
                 </tr>
@@ -87,6 +88,7 @@ else
                         <td><span class="badge bg-primary">#@item.BookingId</span></td>
                         <td><strong>@Html.DisplayFor(modelItem => item.Event.Name)</strong></td>
                         <td>@Html.DisplayFor(modelItem => item.Venue.Name)</td>
+                        <td>@Html.DisplayFor(modelItem => item.Venue.Location)</td>
                         <td>@item.BookingDate.ToString("MMM dd, yyyy HH:mm")</td>
                         <td>
                             <a asp-action="Edit" asp-route-id="@item.BookingId" class="btn btn-sm btn-warning">Edit</a>

@@ -17,10 +17,10 @@ namespace CLDV6211POE_Part2.Controllers
 
         public async Task<IActionResult> Index(string searchString, string searchBy)
         {
-            var bookings = await _context.Bookings
+            var query = _context.Bookings
                 .Include(b => b.Event)
                 .Include(b => b.Venue)
-                .ToListAsync();
+                .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
             {
@@ -30,17 +30,19 @@ namespace CLDV6211POE_Part2.Controllers
                 {
                     if (int.TryParse(searchString, out int bookingId))
                     {
-                        bookings = bookings.Where(b => b.BookingId == bookingId).ToList();
+                        query = query.Where(b => b.BookingId == bookingId);
                     }
                 }
                 else if (searchBy == "EventName")
                 {
-                    bookings = bookings.Where(b => 
-                        b.Event != null && 
-                        b.Event.Name.ToLower().Contains(searchString.ToLower())
-                    ).ToList();
+                    query = query.Where(b =>
+                        b.Event != null &&
+                        EF.Functions.Like(b.Event.Name, $"%{searchString}%")
+                    );
                 }
             }
+
+            var bookings = await query.ToListAsync();
 
             ViewData["SearchString"] = searchString;
             ViewData["SearchBy"] = searchBy;
@@ -70,8 +72,8 @@ namespace CLDV6211POE_Part2.Controllers
 
         public async Task<IActionResult> Create()
         {
-            var events = await _context.Events.ToListAsync();
-            var venues = await _context.Venues.ToListAsync();
+            var events = await _context.Events.AsNoTracking().ToListAsync();
+            var venues = await _context.Venues.AsNoTracking().ToListAsync();
 
             if (!events.Any() || !venues.Any())
             {
@@ -88,22 +90,22 @@ namespace CLDV6211POE_Part2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("BookingId,EventId,VenueId,BookingDate")] Booking booking)
         {
-            var eventExists = await _context.Events.AnyAsync(e => e.EventId == booking.EventId);
-            var venueExists = await _context.Venues.AnyAsync(v => v.VenueId == booking.VenueId);
+            var events = await _context.Events.AsNoTracking().ToListAsync();
+            var venues = await _context.Venues.AsNoTracking().ToListAsync();
 
-            if (!eventExists)
+            if (!events.Any(e => e.EventId == booking.EventId))
             {
                 ModelState.AddModelError("EventId", "Selected event does not exist.");
             }
 
-            if (!venueExists)
+            if (!venues.Any(v => v.VenueId == booking.VenueId))
             {
                 ModelState.AddModelError("VenueId", "Selected venue does not exist.");
             }
 
             if (ModelState.IsValid)
             {
-                var hasConflict = await CheckDoubleBooking(booking.VenueId, booking.EventId, booking.BookingDate, null);
+                var hasConflict = await CheckDoubleBooking(booking.VenueId, booking.EventId, null);
                 
                 if (hasConflict)
                 {
@@ -113,10 +115,20 @@ namespace CLDV6211POE_Part2.Controllers
                     return View(booking);
                 }
 
-                _context.Add(booking);
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Booking created successfully.";
-                return RedirectToAction(nameof(Index));
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    _context.Add(booking);
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                    TempData["SuccessMessage"] = "Booking created successfully.";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
             }
             ViewData["EventId"] = new SelectList(await _context.Events.ToListAsync(), "EventId", "Name", booking.EventId);
             ViewData["VenueId"] = new SelectList(await _context.Venues.ToListAsync(), "VenueId", "Name", booking.VenueId);
@@ -135,8 +147,12 @@ namespace CLDV6211POE_Part2.Controllers
             {
                 return NotFound();
             }
-            ViewData["EventId"] = new SelectList(await _context.Events.ToListAsync(), "EventId", "Name", booking.EventId);
-            ViewData["VenueId"] = new SelectList(await _context.Venues.ToListAsync(), "VenueId", "Name", booking.VenueId);
+
+            var events = await _context.Events.AsNoTracking().ToListAsync();
+            var venues = await _context.Venues.AsNoTracking().ToListAsync();
+
+            ViewData["EventId"] = new SelectList(events, "EventId", "Name", booking.EventId);
+            ViewData["VenueId"] = new SelectList(venues, "VenueId", "Name", booking.VenueId);
             return View(booking);
         }
 
@@ -149,22 +165,22 @@ namespace CLDV6211POE_Part2.Controllers
                 return NotFound();
             }
 
-            var eventExists = await _context.Events.AnyAsync(e => e.EventId == booking.EventId);
-            var venueExists = await _context.Venues.AnyAsync(v => v.VenueId == booking.VenueId);
+            var events = await _context.Events.AsNoTracking().ToListAsync();
+            var venues = await _context.Venues.AsNoTracking().ToListAsync();
 
-            if (!eventExists)
+            if (!events.Any(e => e.EventId == booking.EventId))
             {
                 ModelState.AddModelError("EventId", "Selected event does not exist.");
             }
 
-            if (!venueExists)
+            if (!venues.Any(v => v.VenueId == booking.VenueId))
             {
                 ModelState.AddModelError("VenueId", "Selected venue does not exist.");
             }
 
             if (ModelState.IsValid)
             {
-                var hasConflict = await CheckDoubleBooking(booking.VenueId, booking.EventId, booking.BookingDate, booking.BookingId);
+                var hasConflict = await CheckDoubleBooking(booking.VenueId, booking.EventId, booking.BookingId);
                 
                 if (hasConflict)
                 {
@@ -174,14 +190,17 @@ namespace CLDV6211POE_Part2.Controllers
                     return View(booking);
                 }
 
+                using var transaction = await _context.Database.BeginTransactionAsync();
                 try
                 {
                     _context.Update(booking);
                     await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
                     TempData["SuccessMessage"] = "Booking updated successfully.";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
+                    await transaction.RollbackAsync();
                     if (!BookingExists(booking.BookingId))
                     {
                         return NotFound();
@@ -190,26 +209,28 @@ namespace CLDV6211POE_Part2.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["EventId"] = new SelectList(await _context.Events.ToListAsync(), "EventId", "Name", booking.EventId);
-            ViewData["VenueId"] = new SelectList(await _context.Venues.ToListAsync(), "VenueId", "Name", booking.VenueId);
+            ViewData["EventId"] = new SelectList(events, "EventId", "Name", booking.EventId);
+            ViewData["VenueId"] = new SelectList(venues, "VenueId", "Name", booking.VenueId);
             return View(booking);
         }
 
-        private async Task<bool> CheckDoubleBooking(int venueId, int eventId, DateTime bookingDate, int? excludeBookingId)
+        private async Task<bool> CheckDoubleBooking(int venueId, int eventId, int? excludeBookingId)
         {
-            var existingBookings = await _context.Bookings
-                .Where(b => b.VenueId == venueId && b.BookingDate.Date == bookingDate.Date)
-                .ToListAsync();
+            var newEvent = await _context.Events.FindAsync(eventId);
+            if (newEvent == null) return false;
 
-            var timeSlot = bookingDate.TimeOfDay;
-            var duration = TimeSpan.FromHours(2);
+            var conflictingBooking = await _context.Bookings
+                .Include(b => b.Event)
+                .Where(b => b.VenueId == venueId)
+                .Where(b => b.BookingId != (excludeBookingId ?? 0))
+                .Where(b => b.Event != null)
+                .Where(b => 
+                    // Check if time ranges overlap: new event starts before existing ends AND new event ends after existing starts
+                    (newEvent.StartDate < b.Event.EndDate && newEvent.EndDate > b.Event.StartDate)
+                )
+                .FirstOrDefaultAsync();
 
-            return existingBookings.Any(b => 
-                b.BookingId != (excludeBookingId ?? 0) &&
-                b.BookingDate.Date == bookingDate.Date &&
-                b.BookingDate.TimeOfDay <= timeSlot + duration &&
-                b.BookingDate.TimeOfDay >= timeSlot - duration
-            );
+            return conflictingBooking != null;
         }
 
         public async Task<IActionResult> Delete(int? id)
@@ -236,12 +257,22 @@ namespace CLDV6211POE_Part2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var booking = await _context.Bookings.FindAsync(id);
-            if (booking != null)
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                _context.Bookings.Remove(booking);
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Booking deleted successfully.";
+                var booking = await _context.Bookings.FindAsync(id);
+                if (booking != null)
+                {
+                    _context.Bookings.Remove(booking);
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                    TempData["SuccessMessage"] = "Booking deleted successfully.";
+                }
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
             }
             return RedirectToAction(nameof(Index));
         }

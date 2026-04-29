@@ -3,6 +3,7 @@ using CLDV6211POE_Part2.Models;
 using CLDV6211POE_Part2.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace CLDV6211POE_Part2.Controllers
 {
@@ -10,11 +11,13 @@ namespace CLDV6211POE_Part2.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly BlobStorageService _blobService;
+        private readonly ILogger<VenuesController> _logger;
 
-        public VenuesController(ApplicationDbContext context, BlobStorageService blobService)
+        public VenuesController(ApplicationDbContext context, BlobStorageService blobService, ILogger<VenuesController> logger)
         {
             _context = context;
             _blobService = blobService;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -51,15 +54,16 @@ namespace CLDV6211POE_Part2.Controllers
         {
             if (ModelState.IsValid)
             {
-                try
-                {
-                    venue.ImageUrl = await _blobService.UploadImageAsync(ImageFile);
-                }
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError("", "Failed to upload image: " + ex.Message);
-                    return View(venue);
-                }
+             try
+             {
+                 venue.ImageUrl = await _blobService.UploadImageAsync(ImageFile);
+             }
+             catch (Exception ex)
+             {
+                 _logger.LogError(ex, "Failed to upload image for venue {VenueName}", venue.Name);
+                 ModelState.AddModelError("", "Failed to upload image: " + ex.Message);
+                 return View(venue);
+             }
 
                 _context.Add(venue);
                 await _context.SaveChangesAsync();

@@ -13,7 +13,7 @@ namespace CLDV6211POE_Part2
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            builder.Services.AddSingleton<BlobStorageService>();
+            builder.Services.AddScoped<BlobStorageService>();
 
             builder.Services.AddControllersWithViews();
 
