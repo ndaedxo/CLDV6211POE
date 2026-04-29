@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CLDV6211POE_Part2")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0895ad1a613d58097780ce26c7045d8a45985f82")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4edaa08b1a7d8bc3f9a2827311b8f4bcc3dee240")]
 [assembly: System.Reflection.AssemblyProductAttribute("CLDV6211POE_Part2")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CLDV6211POE_Part2")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
