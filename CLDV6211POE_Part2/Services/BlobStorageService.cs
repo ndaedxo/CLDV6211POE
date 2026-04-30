@@ -22,6 +22,11 @@ namespace CLDV6211POE_Part2.Services
             CreateContainerIfNotExists();
         }
 
+        public BlobContainerClient GetContainerClient()
+        {
+            return _containerClient;
+        }
+
         private void CreateContainerIfNotExists()
         {
             try

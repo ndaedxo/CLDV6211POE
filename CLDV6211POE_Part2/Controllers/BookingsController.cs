@@ -81,8 +81,8 @@ namespace CLDV6211POE_Part2.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewData["EventId"] = new SelectList(events, "EventId", "Name");
-            ViewData["VenueId"] = new SelectList(venues, "VenueId", "Name");
+            ViewBag.EventId = new SelectList(events, "EventId", "Name");
+            ViewBag.VenueId = new SelectList(venues, "VenueId", "Name");
             return View();
         }
 

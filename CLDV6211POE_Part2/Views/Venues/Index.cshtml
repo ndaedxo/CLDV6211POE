@@ -51,7 +51,7 @@ else
                         <td><strong>@Html.DisplayFor(modelItem => item.Name)</strong></td>
                         <td>@Html.DisplayFor(modelItem => item.Location)</td>
                         <td><span class="badge bg-secondary">@Html.DisplayFor(modelItem => item.Capacity)</span></td>
-                        <td><img src="@Html.DisplayFor(modelItem => item.ImageUrl)" alt="@Html.DisplayFor(modelItem => item.Name)" style="width:100px;height:60px;object-fit:cover;" /></td>
+                         <td><img src="@(item.ImageUrl.Contains("placeholder") ? item.ImageUrl : "/images/" + System.IO.Path.GetFileName(new Uri(item.ImageUrl).LocalPath))" alt="@item.Name" style="width:100px;height:60px;object-fit:cover;" /></td>
                         <td>
                             <a asp-action="Edit" asp-route-id="@item.VenueId" class="btn btn-sm btn-warning">Edit</a>
                             <a asp-action="Details" asp-route-id="@item.VenueId" class="btn btn-sm btn-info">Details</a>

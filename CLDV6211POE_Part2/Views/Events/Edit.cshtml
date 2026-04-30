@@ -52,7 +52,7 @@
             <div class="col-md-4">
                 <div class="text-center text-muted mt-4">
                     <p class="mb-2">Current Image</p>
-                    <img id="eventEditPreview" src="@Model.ImageUrl" alt="Preview" class="img-fluid rounded" style="max-height:200px;object-fit:cover;" />
+                    <img id="eventEditPreview" src="@(Model.ImageUrl.Contains("placeholder") ? Model.ImageUrl : "/images/" + System.IO.Path.GetFileName(new Uri(Model.ImageUrl).LocalPath))" alt="Preview" class="img-fluid rounded" style="max-height:200px;object-fit:cover;" />
                 </div>
             </div>
         </div>

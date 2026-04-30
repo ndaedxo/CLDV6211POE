@@ -17,14 +17,14 @@
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
                     <div class="mb-3">
                         <label asp-for="EventId" class="form-label"></label>
-                        <select asp-for="EventId" class="form-control" asp-items="ViewBag.EventId">
+                        <select asp-for="EventId" class="form-control" asp-items="@ViewBag.EventId">
                             <option value="">-- Select Event --</option>
                         </select>
                         <span asp-validation-for="EventId" class="text-danger"></span>
                     </div>
                     <div class="mb-3">
                         <label asp-for="VenueId" class="form-label"></label>
-                        <select asp-for="VenueId" class="form-control" asp-items="ViewBag.VenueId">
+                        <select asp-for="VenueId" class="form-control" asp-items="@ViewBag.VenueId">
                             <option value="">-- Select Venue --</option>
                         </select>
                         <span asp-validation-for="VenueId" class="text-danger"></span>
